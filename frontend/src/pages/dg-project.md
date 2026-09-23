@@ -12,12 +12,12 @@ This project highlights full-stack software development by building an end-to-en
 ## Architectural Layers
 
 1. Embedded Client Layer (Smartwatch Application)
-* Targets Garmin Connect IQ (Monkey C) or WearOS (Kotlin).
+* Targets or WearOS (Kotlin).
 * Caches round information locally in memory to handle offline play when course cell coverage is weak.
 * Bundles and transmits the scorecard payload via JSON once an internet connection is established.
 
 2. Ingestion Layer (Backend API)
-* Built using Python (FastAPI) or Node.js running inside isolated Docker containers.
+* Built using GO running inside isolated Docker containers.
 * Validates incoming score arrays, processes rounds relative to course par, and calculates player handicap changes.
 
 3. Persistence Layer (Relational Database)

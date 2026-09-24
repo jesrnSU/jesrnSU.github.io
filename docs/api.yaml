@@ -1,0 +1,8 @@
+openapi: 3.0.3
+info:
+  title: Disc Golf Scorekeeper API
+  version: 0.0.0
+  description: Contract placeholder. No application endpoints are implemented.
+paths: {}
+# TODO: Define the first endpoint, request/response schemas, and error responses.
+# Add operations here as you design them; do not describe planned routes as live.

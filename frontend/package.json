@@ -12,9 +12,13 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.3.3"
+    "astro": "^7.3.3",
+    "canvas-confetti": "^1.9.4"
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0"
   }
 }

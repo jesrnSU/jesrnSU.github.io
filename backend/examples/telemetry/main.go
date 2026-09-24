@@ -1,12 +1,13 @@
+// Original telemetry prototype. See README.md in this directory before running.
 package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
-	"log"
 
-  "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -33,7 +34,7 @@ func main() {
 		connStr := "postgres://postgres:password@localhost:5432/postgres"
 		conn, err := pgx.Connect(context.Background(), connStr)
 		if err != nil {
-			log.Printf("REAL DATABASE ERROR: %v\n", err) 
+			log.Printf("REAL DATABASE ERROR: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -46,7 +47,7 @@ func main() {
 			);
 		`)
 
-		_, err = conn.Exec(context.Background(), 
+		_, err = conn.Exec(context.Background(),
 			"INSERT INTO telemetry (device_id, heart_rate, steps, timestamp) VALUES ($1, $2, $3, $4)",
 			payload.DeviceID, payload.HeartRate, payload.Steps, payload.Timestamp,
 		)

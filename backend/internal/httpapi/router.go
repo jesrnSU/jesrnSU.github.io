@@ -6,6 +6,8 @@ import "github.com/gin-gonic/gin"
 func NewRouter() *gin.Engine {
 	router := gin.Default()
 	router.GET("/healthz", func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://localhost:4321")
+		
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})

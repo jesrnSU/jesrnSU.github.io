@@ -11,5 +11,30 @@ import ConfettiButton from '../components/confettiButton.astro';
     <h1>Disc golf statistics dashboard</h1>
     <p>Work in progress.</p>
     <ConfettiButton></ConfettiButton>
+    <button id="api-button" type="button"> Check API </button>
+    <p id="api-result" role="status"></p>
   </main>
 </Layout>
+
+<script>
+  import { checkAPI } from '../lib/api'
+
+  const button = document.querySelector<HTMLButtonElement>('#api-button');
+  const result = document.querySelector<HTMLParagraphElement>('#api-result');
+
+  if (button && result) {
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      result.textContent = 'Checking…';
+
+      try {
+        result.textContent = await checkAPI();
+      } catch (error) {
+        result.textContent =
+          error instanceof Error ? error.message : 'Could not reach the API.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>

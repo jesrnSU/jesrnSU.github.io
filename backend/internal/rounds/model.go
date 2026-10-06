@@ -9,6 +9,7 @@ type HoleScore struct {
 
 type Round struct {
 	CourseName string `json:"course_name"`
+	Date string `json:"date"`
 	Holes []HoleScore `json:"holes"`
 }
 

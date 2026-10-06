@@ -1,18 +1,19 @@
-// Package rounds will contain round data and scoring rules.
+// Package rounds contains data and calculations independent of HTTP and SQL.
 package rounds
 
+// HoleScore describes one hole. JSON tags map Go fields to request field names.
 type HoleScore struct {
 	HoleNumber int `json:"hole_number"`
-	Par int `json:"par"`
-	Strokes int `json:"strokes"`
+	Par        int `json:"par"`
+	Strokes    int `json:"strokes"`
 }
 
+// Round is your existing model. The example passes Date through as text;
+// choosing a date format and validating it remain separate exercises.
 type Round struct {
-	CourseName string `json:"course_name"`
-	Date string `json:"date"`
-	Holes []HoleScore `json:"holes"`
+	CourseName string      `json:"course_name"`
+	Date       string      `json:"date"`
+	Holes      []HoleScore `json:"holes"`
 }
 
-
-// TODO: Define the round and hole-score types you need for your first feature.
-// Decide identifiers, timestamps, player relationships, and score fields yourself.
+// TODO: Decide validation rules before adding persistence.

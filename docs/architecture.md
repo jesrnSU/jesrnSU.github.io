@@ -2,7 +2,8 @@
 
 The repository keeps the existing Go/Gin/pgx backend, PostgreSQL development
 container, and static Astro frontend. The scaffold introduces package boundaries
-without implementing a disc golf data model or application behavior.
+with a small round-total example built on your model and calculation.
+See [the guided walkthrough](round-example.md) for a runnable request and diagram.
 
 ## Responsibilities
 
@@ -35,8 +36,8 @@ implement them in `postgres`. Wire the implementations in `cmd/api`.
 - Statistics definitions, charting, and dashboard design.
 - Watch platform and backend hosting/container deployment.
 
-No placeholder operation reports success or returns invented data. The new API
-has no registered endpoints and does not connect to PostgreSQL. The old telemetry
+The API exposes a health endpoint and a round-total calculation. The calculation
+does not save anything or connect to PostgreSQL. The old telemetry
 prototype is isolated under `backend/examples/telemetry`.
 
 ## Frontend deployment

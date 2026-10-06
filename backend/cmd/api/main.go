@@ -11,6 +11,7 @@ func main() {
 	cfg := config.Load()
 	// TODO: Initialize shared dependencies here and close them on shutdown.
 	// Wire storage into services, then services into HTTP handlers.
+	// The current total calculation has no dependencies to initialize.
 	router := httpapi.NewRouter()
 
 	// TODO: Configure an http.Server with timeouts and graceful shutdown

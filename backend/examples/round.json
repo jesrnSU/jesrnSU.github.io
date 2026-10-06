@@ -1,0 +1,8 @@
+{
+  "course_name": "Practice course",
+  "date": "2026-10-06",
+  "holes": [
+    { "hole_number": 1, "par": 3, "strokes": 4 },
+    { "hole_number": 2, "par": 3, "strokes": 3 }
+  ]
+}

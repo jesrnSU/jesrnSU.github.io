@@ -1,5 +1,8 @@
 package rounds
 
+// TotalStrokes is a pure calculation: it needs no server or database.
+// The HTTP handler calls this function, but tests can also call it directly.
+// It adds the supplied values without validating them; validation is a future step.
 func TotalStrokes(round Round) int {
 	total := 0
 
@@ -7,9 +10,20 @@ func TotalStrokes(round Round) int {
 		total += hole.Strokes
 	}
 
-	return total;
+	return total
 }
 
+func TotalPar(round Round) int {
+	total := 0
+
+	for _, hole := range round.Holes {
+		total += hole.Par
+	}
+
+	return total
+}
+
+// ConvertToStringDate is your unfinished exercise and is not used by the example.
 func ConvertToStringDate(round Round) string {
 	return "not implemented"
 }

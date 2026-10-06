@@ -22,12 +22,14 @@ frontend/src/
 watch/                   Watch client planning placeholder
 docs/
   architecture.md        Package responsibilities and open decisions
-  api.yaml               Empty OpenAPI contract to develop yourself
+  api.yaml               Current learning API contract
+  round-example.md       Guided request walkthrough and curl example
 ```
 
-Start with [the architecture guide](docs/architecture.md). TODO comments mark
-places for your implementation. There are no predefined round fields, scoring
-rules, storage interfaces, schemas, or application endpoints.
+Start with [the round example walkthrough](docs/round-example.md), then read
+[the architecture guide](docs/architecture.md). The example connects your round
+model and total calculation to an HTTP handler. TODO comments mark future work;
+storage, business validation, and database schema remain unimplemented.
 
 ## Run locally
 
@@ -41,8 +43,9 @@ cd backend
 go run ./cmd/api
 ```
 
-It listens on port 8080. All paths return 404 until you register routes in
-`internal/httpapi/router.go`. PostgreSQL is not required for this skeleton.
+It listens on port 8080. GET `/healthz` returns `pong` in JSON, and POST
+`/api/v1/rounds/total` calculates total strokes. See the walkthrough for a sample
+request. PostgreSQL is not required for these endpoints.
 Stop it with Ctrl+C. The old `go run main.go` command has been replaced.
 
 To override the address:
@@ -85,7 +88,7 @@ go test ./...
 go vet ./...
 ```
 
-There are no tests yet. Add meaningful tests alongside your implementation.
+Tests cover the round total and the HTTP example, including invalid JSON.
 Use `gofmt -w` on Go files you edit.
 
 From `frontend/`:
@@ -98,11 +101,11 @@ CI runs Go formatting checks, tests, vet, and the Astro build on pull requests
 and pushes to `main`. An Astro build is not a full TypeScript type check.
 The existing Pages deployment workflow remains separate; CI does not gate it.
 
-## Suggested first implementation
+## Suggested next implementation
 
-1. Define the data needed for one round in `internal/rounds/model.go`.
-2. Describe one operation in `docs/api.yaml`.
-3. Implement its service and tests, then define the storage interface it needs.
+1. Follow `docs/round-example.md` and change the sample hole scores.
+2. Add a total-par calculation and test, then update the response and API contract.
+3. Decide validation rules and test them before adding a save operation.
 4. Choose a migration tool, add a schema, and implement persistence.
 5. Wire the handler and dependencies in `cmd/api/main.go`.
 6. Implement the browser API call and dashboard component.

@@ -1,8 +1,101 @@
 openapi: 3.0.3
 info:
   title: Disc Golf Scorekeeper API
-  version: 0.0.0
-  description: Contract placeholder. No application endpoints are implemented.
-paths: {}
-# TODO: Define the first endpoint, request/response schemas, and error responses.
-# Add operations here as you design them; do not describe planned routes as live.
+  version: 0.1.0
+  description: Learning example. Calculates totals without persistence or business validation.
+paths:
+  /healthz:
+    get:
+      responses:
+        '200':
+          description: API is running; this does not check the database.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: pong
+  /api/v1/rounds/total:
+    post:
+      summary: Calculate total strokes without saving the round
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Round'
+      responses:
+        '200':
+          description: Sum of supplied strokes. Missing holes produce zero.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total_strokes]
+                properties:
+                  total_strokes:
+                    type: integer
+                    example: 6
+        '400':
+          description: JSON cannot be decoded into the round model.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/v1/rounds/course_par:
+    post:
+      summary: Calculate the course par from holes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+            $ref: '#/components/schemas/Round'
+      responses:
+        '200':
+          description: Sum of the holes par. 
+          content: 
+            application/json:
+              schema:
+                type: object
+                required: [total_par]
+                properties:
+                  total_par:
+                    type: integer
+                    example: 60
+        '400':
+          description: JSON cannot be decoded into the round model.
+          content: 
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+components:
+  schemas:
+    Round:
+      type: object
+      description: Fields are not required or business-validated in this example.
+      properties:
+        course_name:
+          type: string
+        date:
+          type: string
+          description: Plain text; no date format enforced yet.
+        holes:
+          type: array
+          items:
+            type: object
+            properties:
+              hole_number:
+                type: integer
+              par:
+                type: integer
+              strokes:
+                type: integer

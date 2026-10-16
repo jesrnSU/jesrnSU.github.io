@@ -19,7 +19,7 @@ paths:
                     example: pong
   /api/v1/rounds/total:
     post:
-      summary: Calculate total strokes without saving the round
+      summary: Calculate strokes, par, and score relative to par without saving the round
       requestBody:
         required: true
         content:
@@ -28,16 +28,23 @@ paths:
               $ref: '#/components/schemas/Round'
       responses:
         '200':
-          description: Sum of supplied strokes for a valid completed round.
+          description: Scoring totals for a valid completed round.
           content:
             application/json:
               schema:
                 type: object
-                required: [total_strokes]
+                required: [total_strokes, total_par, score_relative_to_par]
                 properties:
                   total_strokes:
                     type: integer
+                    example: 7
+                  total_par:
+                    type: integer
                     example: 6
+                  score_relative_to_par:
+                    type: integer
+                    description: Total strokes minus total par; positive is over par, negative is under par, and zero is even.
+                    example: 1
         '400':
           description: JSON cannot be decoded or the round fails validation.
           content:

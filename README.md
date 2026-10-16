@@ -29,7 +29,7 @@ docs/
 Start with [the round example walkthrough](docs/round-example.md), then read
 [the architecture guide](docs/architecture.md). The example connects your round
 model and total calculation to an HTTP handler. TODO comments mark future work;
-storage, business validation, and database schema remain unimplemented.
+completed-round validation and scoring are implemented; storage and database schema remain unimplemented.
 
 ## Run locally
 
@@ -44,7 +44,7 @@ go run ./cmd/api
 ```
 
 It listens on port 8080. GET `/healthz` returns `pong` in JSON, and POST
-`/api/v1/rounds/total` calculates total strokes. See the walkthrough for a sample
+`/api/v1/rounds/total` calculates total strokes, total par, and score relative to par. See the walkthrough for a sample
 request. PostgreSQL is not required for these endpoints.
 Stop it with Ctrl+C. The old `go run main.go` command has been replaced.
 
@@ -103,12 +103,13 @@ The existing Pages deployment workflow remains separate; CI does not gate it.
 
 ## Suggested next implementation
 
-1. Follow `docs/round-example.md` and change the sample hole scores.
-2. Add a total-par calculation and test, then update the response and API contract.
-3. Decide validation rules and test them before adding a save operation.
-4. Choose a migration tool, add a schema, and implement persistence.
-5. Wire the handler and dependencies in `cmd/api/main.go`.
-6. Implement the browser API call and dashboard component.
+Stage 1 is complete: completed-round validation and all three scoring values are
+implemented and tested.
+
+1. Choose a migration tool and add a schema for rounds and hole scores.
+2. Implement save and retrieval operations using PostgreSQL.
+3. Wire the handler and dependencies in `cmd/api/main.go`.
+4. Implement the browser API calls and dashboard scorecard.
 
 Choose watch platform, authentication, synchronization rules, and deployment
 details when you are ready to work on those parts.

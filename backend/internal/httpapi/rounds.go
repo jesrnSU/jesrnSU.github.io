@@ -9,7 +9,9 @@ import (
 
 // roundTotalResponse belongs to the HTTP layer: it defines this endpoint's JSON.
 type roundTotalResponse struct {
-	TotalStrokes int `json:"total_strokes"`
+	TotalStrokes       int `json:"total_strokes"`
+	TotalPar           int `json:"total_par"`
+	ScoreRelativeToPar int `json:"score_relative_to_par"`
 }
 
 type roundParResponse struct {
@@ -26,16 +28,18 @@ func calculateRoundTotal(c *gin.Context) {
 		return // Stop here; do not calculate a result from a failed decode.
 	}
 
-	// 2. Delegate the calculation. Keep the scoring loop out of the handler.
+	// 2. Validate the completed round before calculating.
 	if err := rounds.ValidateRound(round); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	total := rounds.TotalStrokes(round)
-
 	// 3. Translate the result into an HTTP response.
-	c.JSON(http.StatusOK, roundTotalResponse{TotalStrokes: total})
+	c.JSON(http.StatusOK, roundTotalResponse{
+		TotalStrokes:       rounds.TotalStrokes(round),
+		TotalPar:           rounds.TotalPar(round),
+		ScoreRelativeToPar: rounds.ScoreRelativeToPar(round),
+	})
 }
 
 func calculateCoursePar(c *gin.Context) {

@@ -1,7 +1,7 @@
 # Follow one round through the code
 
 This example uses your existing Round, HoleScore, and TotalStrokes code.
-It calculates a total without saving anything. Start here before implementing
+It calculates total strokes, total par, and score relative to par without saving anything. Start here before implementing
 database access or introducing more interfaces.
 
 ## Run it
@@ -22,7 +22,9 @@ curl -i http://localhost:8080/api/v1/rounds/total \
   --data-binary @examples/round.json
 ```
 
-Expect HTTP 200 and `{"total_strokes":7}`. Edit the strokes in the sample and
+Expect HTTP 200 and `{"total_strokes":7,"total_par":6,"score_relative_to_par":1}`.
+Positive scores are over par, negative scores are under par, and zero is even.
+Edit the strokes in the sample and
 send it again. Dates must be valid calendar dates in YYYY-MM-DD format.
 PostgreSQL and Astro do not need to be running for this exercise.
 
@@ -52,9 +54,11 @@ sequenceDiagram
     Client->>Router: POST /api/v1/rounds/total with JSON
     Router->>Handler: calculateRoundTotal(context)
     Note over Handler: Decode into rounds.Round from model.go
-    Handler->>Service: TotalStrokes(round)
-    Service-->>Handler: 7
-    Handler-->>Client: HTTP 200 with total_strokes: 7
+    Handler->>Service: ValidateRound(round)
+    Service-->>Handler: nil (valid round)
+    Handler->>Service: TotalStrokes, TotalPar, ScoreRelativeToPar
+    Service-->>Handler: 7, 6, 1
+    Handler-->>Client: HTTP 200 with all three scoring values
 ```
 
 The request passes a value to a function; it does not execute each file in order.
@@ -80,5 +84,5 @@ the existing CORS header on GET `/healthz` only covers that route.
 
 ## Your next small exercise
 
-Total par and completed-round validation are implemented. Next, add a separate
+All three scoring values and completed-round validation are implemented. Next, add a separate
 save operation with persistence.

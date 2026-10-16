@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Disc Golf Scorekeeper API
   version: 0.1.0
-  description: Learning example. Calculates totals without persistence or business validation.
+  description: Learning example. Calculates totals with completed-round validation and without persistence.
 paths:
   /healthz:
     get:
@@ -28,7 +28,7 @@ paths:
               $ref: '#/components/schemas/Round'
       responses:
         '200':
-          description: Sum of supplied strokes. Missing holes produce zero.
+          description: Sum of supplied strokes for a valid completed round.
           content:
             application/json:
               schema:
@@ -39,7 +39,7 @@ paths:
                     type: integer
                     example: 6
         '400':
-          description: JSON cannot be decoded into the round model.
+          description: JSON cannot be decoded or the round fails validation.
           content:
             application/json:
               schema:
@@ -55,7 +55,7 @@ paths:
         content:
           application/json:
             schema:
-            $ref: '#/components/schemas/Round'
+              $ref: '#/components/schemas/Round'
       responses:
         '200':
           description: Sum of the holes par. 
@@ -69,7 +69,7 @@ paths:
                     type: integer
                     example: 60
         '400':
-          description: JSON cannot be decoded into the round model.
+          description: JSON cannot be decoded or the round fails validation.
           content: 
             application/json:
               schema:
@@ -81,21 +81,30 @@ components:
   schemas:
     Round:
       type: object
-      description: Fields are not required or business-validated in this example.
+      description: Completed round. Hole numbers must be unique; validation returns the first error.
+      required: [course_name, date, holes]
       properties:
         course_name:
           type: string
+          minLength: 1
+          description: Must contain non-whitespace text.
         date:
           type: string
-          description: Plain text; no date format enforced yet.
+          format: date
+          description: Valid calendar date in YYYY-MM-DD format.
         holes:
           type: array
+          minItems: 1
           items:
             type: object
+            required: [hole_number, par, strokes]
             properties:
               hole_number:
                 type: integer
+                minimum: 1
               par:
                 type: integer
+                minimum: 1
               strokes:
                 type: integer
+                minimum: 1

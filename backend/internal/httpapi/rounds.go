@@ -27,6 +27,11 @@ func calculateRoundTotal(c *gin.Context) {
 	}
 
 	// 2. Delegate the calculation. Keep the scoring loop out of the handler.
+	if err := rounds.ValidateRound(round); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	total := rounds.TotalStrokes(round)
 
 	// 3. Translate the result into an HTTP response.
@@ -37,6 +42,11 @@ func calculateCoursePar(c *gin.Context) {
 	var round rounds.Round
 	if err := c.ShouldBindJSON(&round); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "request body must match the round JSON structure"})
+		return
+	}
+
+	if err := rounds.ValidateRound(round); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

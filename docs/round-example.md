@@ -22,8 +22,8 @@ curl -i http://localhost:8080/api/v1/rounds/total \
   --data-binary @examples/round.json
 ```
 
-Expect HTTP 200 and `{"total_strokes":6}`. Edit the strokes in the sample and
-send it again. The sample date is illustrative; no date format is enforced.
+Expect HTTP 200 and `{"total_strokes":7}`. Edit the strokes in the sample and
+send it again. Dates must be valid calendar dates in YYYY-MM-DD format.
 PostgreSQL and Astro do not need to be running for this exercise.
 
 ## Read these files in order
@@ -34,7 +34,7 @@ PostgreSQL and Astro do not need to be running for this exercise.
 2. **`backend/internal/httpapi/router.go`** connects a URL and HTTP method to a
    function: POST `/api/v1/rounds/total` calls `calculateRoundTotal`.
 3. **`backend/internal/httpapi/rounds.go`** is that handler. It decodes JSON into
-   a Go value, calls the calculation, and sends JSON back. HTTP-specific concepts
+   a Go value, validates the completed round, calls the calculation, and sends JSON back. HTTP-specific concepts
    such as status codes belong here.
 4. **`backend/internal/rounds/model.go`** defines the data being passed around.
    A struct is a description of data, not a database table or an HTTP endpoint.
@@ -53,8 +53,8 @@ sequenceDiagram
     Router->>Handler: calculateRoundTotal(context)
     Note over Handler: Decode into rounds.Round from model.go
     Handler->>Service: TotalStrokes(round)
-    Service-->>Handler: 6
-    Handler-->>Client: HTTP 200 with total_strokes: 6
+    Service-->>Handler: 7
+    Handler-->>Client: HTTP 200 with total_strokes: 7
 ```
 
 The request passes a value to a function; it does not execute each file in order.
@@ -68,9 +68,10 @@ From `backend/`, run `go test ./...`.
 - `rounds/service_test.go` checks the calculation directly.
 - `httpapi/rounds_test.go` sends the example through the router in memory and
   checks malformed JSON and incorrect field types.
-- Missing fields become Go zero values. An omitted holes list totals zero.
-- No business validation is implemented: negative scores and duplicate holes
-  are not rejected yet. Decide those rules yourself before adding storage.
+- Validation requires a nonblank course name, a valid date, and at least one hole.
+- Hole numbers must be positive and unique; par and strokes must be positive.
+- Both scoring endpoints return HTTP 400 with the first validation error.
+- These rules describe completed rounds; unplayed holes are not supported.
 - `ConvertToStringDate` remains your unused placeholder.
 
 The example uses curl so you can learn the backend separately. To call this POST
@@ -79,6 +80,5 @@ the existing CORS header on GET `/healthz` only covers that route.
 
 ## Your next small exercise
 
-Add a pure function that calculates total par and a test for it. Then decide how
-to expose that result in the HTTP response and update `docs/api.yaml`. Once the
-request flow feels clear, add validation, followed by a separate save operation.
+Total par and completed-round validation are implemented. Next, add a separate
+save operation with persistence.

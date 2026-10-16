@@ -8,12 +8,11 @@ type HoleScore struct {
 	Strokes    int `json:"strokes"`
 }
 
-// Round is your existing model. The example passes Date through as text;
-// choosing a date format and validating it remain separate exercises.
+// Round describes a completed round. Date uses YYYY-MM-DD.
 type Round struct {
 	CourseName string      `json:"course_name"`
 	Date       string      `json:"date"`
 	Holes      []HoleScore `json:"holes"`
 }
 
-// TODO: Decide validation rules before adding persistence.
+// ValidateRound checks these fields before HTTP calculations.

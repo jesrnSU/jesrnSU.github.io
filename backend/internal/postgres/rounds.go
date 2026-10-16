@@ -1,11 +1,18 @@
-// Package postgres will implement persistence using the existing pgx dependency.
 package postgres
 
-// This file is intentionally not involved in the total-calculation example.
-// Calculating a result does not require saving it. When you add a save operation,
-// this package will translate your Go model into SQL rows and back.
+import "github.com/jackc/pgx/v5/pgxpool"
 
-// TODO: Implement the storage interface required by the rounds service.
-// Receive a shared connection pool from cmd/api instead of opening connections
-// per request. Use request contexts and parameterized SQL.
-// Keep schema changes in migrations rather than request handlers.
+// RoundRepository will store and retrieve rounds using the shared pool.
+// It does not own the pool; application startup and shutdown manage its lifetime.
+type RoundRepository struct {
+	pool *pgxpool.Pool
+}
+
+func NewRoundRepository(pool *pgxpool.Pool) *RoundRepository {
+	return &RoundRepository{pool: pool}
+}
+
+// TODO: Add save, list, and get operations after defining the schema.
+// Define the required storage interface in the rounds service package.
+// Use request contexts, parameterized SQL, and a transaction to save a round
+// together with its hole scores. Apply migrations outside request handlers.

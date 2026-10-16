@@ -23,5 +23,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
-docs/round-example.md
+# Local project documentation
+/docs/*.md
 README.md

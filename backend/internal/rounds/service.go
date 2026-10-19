@@ -1,14 +1,12 @@
 package rounds
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 )
 
-// TotalStrokes is a pure calculation: it needs no server or database.
-// The HTTP handler calls this function, but tests can also call it directly.
-// It adds the supplied values without validating them; call ValidateRound before using it with user input.
 func TotalStrokes(round Round) int {
 	total := 0
 
@@ -33,12 +31,10 @@ func ScoreRelativeToPar(round Round) int {
 	return TotalStrokes(round) - TotalPar(round)
 }
 
-// ConvertToStringDate is your unfinished exercise and is not used by the example.
 func ConvertToStringDate(round Round) string {
 	return "not implemented"
 }
 
-// ValidateRound checks a completed round and returns the first validation error.
 func ValidateRound(round Round) error {
 	if strings.TrimSpace(round.CourseName) == "" {
 		return fmt.Errorf("course_name is required")
@@ -68,7 +64,26 @@ func ValidateRound(round Round) error {
 	return nil
 }
 
-// TODO: Implement your first save operation here.
-// Define a small storage interface here when the operation needs persistence.
-// Accept context.Context for operations that call storage.
-// Keep this package independent of Gin and PostgreSQL.
+type RoundStore interface {
+	SaveRound(ctx context.Context, round Round) error
+}
+
+type Service struct {
+	store RoundStore
+}
+
+func NewService(store RoundStore) *Service {
+	return &Service{store: store}
+}
+
+func (s *Service) SaveRound(ctx context.Context, round Round) error {
+	if err := ValidateRound(round); err != nil {
+		return err
+	}
+
+	if err := s.store.SaveRound(ctx, round); err != nil {
+		return fmt.Errorf("save round: %w", err)
+	}
+
+	return nil
+}

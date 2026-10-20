@@ -13,6 +13,7 @@ import (
 	"github.com/jesrnsu/jesrnsu.github.io/internal/config"
 	"github.com/jesrnsu/jesrnsu.github.io/internal/httpapi"
 	"github.com/jesrnsu/jesrnsu.github.io/internal/postgres"
+	"github.com/jesrnsu/jesrnsu.github.io/internal/rounds"
 )
 
 func main() {
@@ -26,6 +27,7 @@ func run() error {
 	defer stop()
 
 	cfg := config.Load()
+	var roundService *rounds.Service
 	if cfg.DatabaseURL != "" {
 		connectCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		pool, err := postgres.Open(connectCtx, cfg.DatabaseURL)
@@ -35,13 +37,13 @@ func run() error {
 		}
 		defer pool.Close()
 		log.Print("PostgreSQL connection pool ready")
-		// TODO: Pass NewRoundRepository(pool) to the rounds service when save and
-		// retrieval operations exist, then inject that service into the handlers.
+		repo := postgres.NewRoundRepository(pool)
+		roundService = rounds.NewService(repo)
 	}
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddr,
-		Handler:           httpapi.NewRouter(),
+		Handler:           httpapi.NewRouter(roundService),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	serverErrors := make(chan error, 1)

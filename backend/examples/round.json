@@ -1,8 +1,194 @@
-{
-  "course_name": "Practice course",
-  "date": "2026-10-06",
-  "holes": [
-    { "hole_number": 1, "par": 3, "strokes": 4 },
-    { "hole_number": 2, "par": 3, "strokes": 3 }
-  ]
-}
+[
+  {
+    "course_name": "Visättra",
+    "date": "2026-10-18",
+    "holes": [
+      {
+        "hole_number": 1,
+        "par": 3,
+        "strokes": 4
+      },
+      {
+        "hole_number": 2,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 3,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 4,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 5,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 6,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 7,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 8,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 9,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 10,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 11,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 12,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 13,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 14,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 15,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 16,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 17,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 18,
+        "par": 4,
+        "strokes": 4
+      }
+    ]
+  },
+  {
+    "course_name": "Rudan",
+    "date": "2026-10-19",
+    "holes": [
+      {
+        "hole_number": 1,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 2,
+        "par": 3,
+        "strokes": 2
+      },
+      {
+        "hole_number": 3,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 4,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 5,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 6,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 7,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 8,
+        "par": 3,
+        "strokes": 2
+      },
+      {
+        "hole_number": 9,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 10,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 11,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 12,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 13,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 14,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 15,
+        "par": 4,
+        "strokes": 4
+      },
+      {
+        "hole_number": 16,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 17,
+        "par": 3,
+        "strokes": 3
+      },
+      {
+        "hole_number": 18,
+        "par": 4,
+        "strokes": 4
+      }
+    ]
+  }
+]

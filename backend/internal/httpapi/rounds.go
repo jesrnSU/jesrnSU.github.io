@@ -17,14 +17,28 @@ type roundParResponse struct {
 	TotalPar int `json:"total_par"`
 }
 
-func saveUserRound(c *gin.Context){
-	var round rounds.Round
-	if err := c.ShouldBindJSON(&round); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "request body must match the round JSON structure"})
-		return
+func saveUserRound(service *rounds.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if service == nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "round storage is unavailable"})
+			return
+		}
+		var round rounds.Round
+		if err := c.ShouldBindJSON(&round); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "request body must match the round JSON structure"})
+			return
+		}
+		if err := rounds.ValidateRound(round); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if err := service.SaveRound(c.Request.Context(), round); err != nil {
+			_ = c.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not save round"})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"message": "round saved"})
 	}
-
-
 }
 
 func calculateRoundTotal(c *gin.Context) {

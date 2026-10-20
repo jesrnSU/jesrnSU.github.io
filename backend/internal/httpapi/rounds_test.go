@@ -1,25 +1,109 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/jesrnsu/jesrnsu.github.io/internal/rounds"
 )
+
+type roundStoreFunc func(context.Context, rounds.Round) error
+
+func (f roundStoreFunc) SaveRound(ctx context.Context, round rounds.Round) error {
+	return f(ctx, round)
+}
+
+func TestSaveRoundEndpoint(t *testing.T) {
+	const valid = `{"course_name":"Practice","date":"2026-10-20","holes":[{"hole_number":1,"par":3,"strokes":4}]}`
+	for _, tt := range []struct {
+		name        string
+		payload     string
+		unavailable bool
+		storeErr    error
+		status      int
+		wantCalls   int
+	}{
+		{name: "saved", payload: valid, status: http.StatusCreated, wantCalls: 1},
+		{name: "invalid JSON", payload: `{`, status: http.StatusBadRequest},
+		{name: "invalid round", payload: `{}`, status: http.StatusBadRequest},
+		{name: "database failure", payload: valid, storeErr: errors.New("private database details"), status: http.StatusInternalServerError, wantCalls: 1},
+		{name: "no database configured", payload: valid, unavailable: true, status: http.StatusServiceUnavailable},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPost, "/api/v1/rounds", strings.NewReader(tt.payload))
+			request.Header.Set("Content-Type", "application/json")
+			calls := 0
+			var service *rounds.Service
+			if !tt.unavailable {
+				service = rounds.NewService(roundStoreFunc(func(ctx context.Context, round rounds.Round) error {
+					calls++
+					if ctx != request.Context() {
+						t.Error("request context was not forwarded")
+					}
+					if round.CourseName != "Practice" || len(round.Holes) != 1 || round.Holes[0].Strokes != 4 {
+						t.Errorf("unexpected saved round: %+v", round)
+					}
+					return tt.storeErr
+				}))
+			}
+			response := httptest.NewRecorder()
+			NewRouter(service).ServeHTTP(response, request)
+			if response.Code != tt.status {
+				t.Fatalf("status = %d, want %d; body = %s", response.Code, tt.status, response.Body.String())
+			}
+			if calls != tt.wantCalls {
+				t.Errorf("storage calls = %d, want %d", calls, tt.wantCalls)
+			}
+			if strings.Contains(response.Body.String(), "private database details") {
+				t.Error("response exposed storage error")
+			}
+		})
+	}
+}
+
+// The example contains multiple rounds; the API accepts one per request.
+func exampleRoundPayload(t *testing.T) []byte {
+	t.Helper()
+	data, err := os.ReadFile("../../examples/round.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var examples []rounds.Round
+	if err := json.Unmarshal(data, &examples); err != nil {
+		t.Fatal(err)
+	}
+	if len(examples) != 2 {
+		t.Fatalf("example contains %d rounds, want 2", len(examples))
+	}
+	for _, round := range examples {
+		if err := rounds.ValidateRound(round); err != nil {
+			t.Fatalf("invalid example round: %v", err)
+		}
+		if len(round.Holes) != 18 {
+			t.Fatalf("example round contains %d holes, want 18", len(round.Holes))
+		}
+	}
+	payload, err := json.Marshal(examples[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	return payload
+}
 
 // Exercise the real router, decoder, service, and response together.
 // httptest does this in memory: no listening port or database is needed.
 func TestCalculateRoundTotal(t *testing.T) {
-	payload, err := os.ReadFile("../../examples/round.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	payload := exampleRoundPayload(t)
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/rounds/total", strings.NewReader(string(payload)))
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
-	NewRouter().ServeHTTP(response, request)
+	NewRouter(nil).ServeHTTP(response, request)
 
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
@@ -32,11 +116,11 @@ func TestCalculateRoundTotal(t *testing.T) {
 	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.TotalStrokes != 7 {
-		t.Fatalf("total_strokes = %d, want 7", body.TotalStrokes)
+	if body.TotalStrokes != 61 {
+		t.Fatalf("total_strokes = %d, want 61", body.TotalStrokes)
 	}
-	if body.TotalPar != 6 {
-		t.Fatalf("total_par = %d, want 6", body.TotalPar)
+	if body.TotalPar != 60 {
+		t.Fatalf("total_par = %d, want 60", body.TotalPar)
 	}
 	if body.ScoreRelativeToPar != 1 {
 		t.Fatalf("score_relative_to_par = %d, want 1", body.ScoreRelativeToPar)
@@ -44,14 +128,11 @@ func TestCalculateRoundTotal(t *testing.T) {
 }
 
 func TestCalculateParTotal(t *testing.T) {
-	payload, err := os.ReadFile("../../examples/round.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+	payload := exampleRoundPayload(t)
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/rounds/course_par", strings.NewReader(string(payload)))
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
-	NewRouter().ServeHTTP(response, request)
+	NewRouter(nil).ServeHTTP(response, request)
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
 	}
@@ -61,8 +142,8 @@ func TestCalculateParTotal(t *testing.T) {
 	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.TotalPar != 6 {
-		t.Fatalf("total_par = %d, want 6", body.TotalPar)
+	if body.TotalPar != 60 {
+		t.Fatalf("total_par = %d, want 60", body.TotalPar)
 	}
 
 }
@@ -73,7 +154,7 @@ func TestCalculateRoundTotalRejectsInvalidJSON(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/api/v1/rounds/total", strings.NewReader(payload))
 			request.Header.Set("Content-Type", "application/json")
 			response := httptest.NewRecorder()
-			NewRouter().ServeHTTP(response, request)
+			NewRouter(nil).ServeHTTP(response, request)
 			if response.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d, want 400", response.Code)
 			}
@@ -88,7 +169,7 @@ func TestScoringEndpointsRejectInvalidRound(t *testing.T) {
 				`{"course_name":"Practice","date":"2026-10-16","holes":[{"hole_number":1,"par":3,"strokes":-1}]}`))
 			request.Header.Set("Content-Type", "application/json")
 			response := httptest.NewRecorder()
-			NewRouter().ServeHTTP(response, request)
+			NewRouter(nil).ServeHTTP(response, request)
 			if response.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d, want 400", response.Code)
 			}
@@ -123,7 +204,7 @@ func TestRoundTotalRelativeScores(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/api/v1/rounds/total", strings.NewReader(string(payload)))
 			request.Header.Set("Content-Type", "application/json")
 			response := httptest.NewRecorder()
-			NewRouter().ServeHTTP(response, request)
+			NewRouter(nil).ServeHTTP(response, request)
 			if response.Code != http.StatusOK {
 				t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
 			}

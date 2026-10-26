@@ -1,115 +1,37 @@
-# Disc golf watch scorekeeper
+# Disc Golf Watch Scorekeeper
 
-A learning project for Go, PostgreSQL, Astro, smartwatch development, and DevOps.
-This repository contains a runnable skeleton, not a finished scorekeeper.
+A work-in-progress personal project for recording disc golf scores on a smartwatch and reviewing rounds in a web dashboard. The goal is to make scorekeeping convenient on the course and help players track their progress over time.
 
-## Structure
+I’m building this project to develop practical experience with Go, relational databases, web development, wearable applications, containers, and virtualisation. It connects these areas through a complete workflow: recording scores, validating and storing rounds, and presenting useful statistics.
 
-```text
-backend/
-  cmd/api/               API entry point and dependency wiring
-  internal/config/       Environment configuration
-  internal/httpapi/      Router and future handlers
-  internal/rounds/       Future models and application rules
-  internal/postgres/     Future persistence code
-  migrations/            Instructions for adding schema migrations
-  examples/telemetry/    Original prototype, preserved separately
-frontend/src/
-  pages/                 Existing portfolio and dashboard placeholder
-  layouts/               Shared page structure
-  components/            UI components
-  lib/api.ts             Starting point for browser API calls
-watch/                   Watch client planning placeholder
-docs/
-  architecture.md        Package responsibilities and open decisions
-  api.yaml               Current learning API contract
-  round-example.md       Guided request walkthrough and curl example
-```
+## Project vision
 
-Start with [the round example walkthrough](docs/round-example.md), then read
-[the architecture guide](docs/architecture.md). The example connects your round
-model and total calculation to an HTTP handler. TODO comments mark future work;
-completed-round validation and scoring are implemented; storage and database schema remain unimplemented.
+- Record hole-by-hole scores directly on a smartwatch.
+- Keep scores available during offline play and synchronize them when connected.
+- Review previous rounds and performance trends in a web dashboard.
 
-## Run locally
+## Current progress
 
-Use the Go version declared in `backend/go.mod`, Node.js matching
-`frontend/package.json`, and Docker Compose if you need PostgreSQL.
+The backend currently validates rounds, calculates total strokes and scores relative to par, and saves rounds and hole scores to PostgreSQL in a single transaction. The Astro dashboard has an initial browser-to-API health check.
 
-Start the API in one terminal:
+The smartwatch application, offline synchronization, round-history interface, and analytics are planned. The watch platform has not been selected yet.
 
-```sh
-cd backend
-go run ./cmd/api
-```
+## Technology and design
 
-It listens on port 8080. GET `/healthz` returns `pong` in JSON, and POST
-`/api/v1/rounds/total` calculates total strokes, total par, and score relative to par. See the walkthrough for a sample
-request. PostgreSQL is not required for these endpoints.
-Stop it with Ctrl+C. The old `go run main.go` command has been replaced.
+| Area | Technologies |
+| --- | --- |
+| Backend API | Go, Gin |
+| Database | PostgreSQL, pgx |
+| Web frontend | Astro, TypeScript |
+| Containers and development infrastructure | Docker, Docker Compose |
+| Automated checks | GitHub Actions |
 
-To override the address:
+The project also provides a practical setting for learning containers and virtualisation, starting with running PostgreSQL in a Docker container and managing its configuration and persistent storage through Docker Compose.
 
-```sh
-HTTP_ADDR=127.0.0.1:8081 go run ./cmd/api
-```
+The backend separates HTTP handling, scoring and validation rules, and database access. A storage interface connects the application service to PostgreSQL, keeping application logic independent of the database implementation. Transactional writes keep each round and its hole scores together.
 
-The root `.env.example` documents configuration. The Go app does not load `.env`
-files automatically; pass environment variables through your shell or runner.
+Automated tests cover scoring, validation, save-service behavior, and HTTP handling. CI checks Go formatting, runs backend tests and static analysis, and builds the frontend.
 
-Start the frontend in another terminal:
+## Planned development
 
-```sh
-cd frontend
-npm ci
-npm run dev -- --background
-```
-
-Open the local URL reported by Astro and visit `/dashboard/` for the placeholder.
-Manage the background server with `npm run astro -- dev status`,
-`npm run astro -- dev logs`, and `npm run astro -- dev stop`.
-
-When you are ready to work with PostgreSQL, run from the repository root:
-
-```sh
-docker compose up -d db
-```
-
-The existing Compose settings and database volume are unchanged. No migrations
-are executed and the new API does not read or write the database yet.
-The original telemetry example has [separate run instructions](backend/examples/telemetry/README.md).
-
-## Checks
-
-From `backend/`:
-
-```sh
-go test ./...
-go vet ./...
-```
-
-Tests cover the round total and the HTTP example, including invalid JSON.
-Use `gofmt -w` on Go files you edit.
-
-From `frontend/`:
-
-```sh
-npm run build
-```
-
-CI runs Go formatting checks, tests, vet, and the Astro build on pull requests
-and pushes to `main`. An Astro build is not a full TypeScript type check.
-The existing Pages deployment workflow remains separate; CI does not gate it.
-
-## Suggested next implementation
-
-Stage 1 is complete: completed-round validation and all three scoring values are
-implemented and tested.
-
-1. Choose a migration tool and add a schema for rounds and hole scores.
-2. Implement save and retrieval operations using PostgreSQL.
-3. Wire the handler and dependencies in `cmd/api/main.go`.
-4. Implement the browser API calls and dashboard scorecard.
-
-Choose watch platform, authentication, synchronization rules, and deployment
-details when you are ready to work on those parts.
+The next steps are round retrieval and database integration tests, followed by browser score entry and round history. The smartwatch client and offline synchronization will build on that foundation, with analytics, authentication, and hosted deployment to follow.

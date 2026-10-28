@@ -46,6 +46,10 @@ func run() error {
 		Handler:           httpapi.NewRouter(roundService),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
+	return serveHTTP(ctx, server)
+}
+
+func serveHTTP(ctx context.Context, server *http.Server) error {
 	serverErrors := make(chan error, 1)
 	go func() { serverErrors <- server.ListenAndServe() }()
 
@@ -56,13 +60,17 @@ func run() error {
 		}
 		return fmt.Errorf("serve HTTP: %w", err)
 	case <-ctx.Done():
-		// Drain active requests before the shared pool is closed.
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			_ = server.Close()
-			return fmt.Errorf("shut down HTTP server: %w", err)
-		}
-		return nil
+		return shutdownHTTP(server)
 	}
+}
+
+func shutdownHTTP(server *http.Server) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		_ = server.Close()
+		return fmt.Errorf("shut down HTTP server: %w", err)
+	}
+	return nil
 }

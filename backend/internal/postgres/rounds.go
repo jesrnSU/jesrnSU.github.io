@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -51,6 +52,58 @@ func (r *RoundRepository) SaveRound(
 	return nil
 }
 
+func (r *RoundRepository) GetRound(
+	ctx context.Context,
+	id int64,
+) (rounds.Round, error) {
+	var round rounds.Round
+	var date time.Time
+
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, course_name, date
+		FROM rounds
+		WHERE id = $1
+	`, id).Scan(&round.Id, &round.CourseName, &date)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return rounds.Round{}, rounds.ErrRoundNotFound
+	}
+	if err != nil {
+		return rounds.Round{}, fmt.Errorf("get round: %w", err)
+	}
+
+	round.Date = date.Format("2006-01-02")
+	round.Holes = make([]rounds.HoleScore, 0)
+
+	rows, err := r.pool.Query(ctx, `
+		SELECT hole_number, par, strokes
+		FROM hole_scores
+		WHERE round_id = $1
+		ORDER BY hole_number
+	`, id)
+	if err != nil {
+		return rounds.Round{}, fmt.Errorf("get hole scores: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var hole rounds.HoleScore
+		if err := rows.Scan(
+			&hole.HoleNumber,
+			&hole.Par,
+			&hole.Strokes,
+		); err != nil {
+			return rounds.Round{}, fmt.Errorf("scan hole score: %w", err)
+		}
+
+		round.Holes = append(round.Holes, hole)
+	}
+	if err := rows.Err(); err != nil {
+		return rounds.Round{}, fmt.Errorf("read hole scores: %w", err)
+	}
+
+	return round, nil
+}
+
 func (r *RoundRepository) insertRound(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -91,4 +144,3 @@ func (r *RoundRepository) insertHoleScores(
 	return nil
 }
 
-// TODO: Add list and get operations.

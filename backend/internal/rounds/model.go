@@ -10,6 +10,7 @@ type HoleScore struct {
 
 // Round describes a completed round. Date uses YYYY-MM-DD.
 type Round struct {
+	Id 				 int64 			 `json:"id"`
 	CourseName string      `json:"course_name"`
 	Date       string      `json:"date"`
 	Holes      []HoleScore `json:"holes"`

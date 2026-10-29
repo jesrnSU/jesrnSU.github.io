@@ -7,63 +7,6 @@ import (
 	"time"
 )
 
-func TotalStrokes(round Round) int {
-	total := 0
-
-	for _, hole := range round.Holes {
-		total += hole.Strokes
-	}
-
-	return total
-}
-
-func TotalPar(round Round) int {
-	total := 0
-
-	for _, hole := range round.Holes {
-		total += hole.Par
-	}
-
-	return total
-}
-
-func ScoreRelativeToPar(round Round) int {
-	return TotalStrokes(round) - TotalPar(round)
-}
-
-func ConvertToStringDate(round Round) string {
-	return "not implemented"
-}
-
-func ValidateRound(round Round) error {
-	if strings.TrimSpace(round.CourseName) == "" {
-		return fmt.Errorf("course_name is required")
-	}
-	if _, err := time.Parse("2006-01-02", round.Date); err != nil {
-		return fmt.Errorf("date must be a valid date in YYYY-MM-DD format")
-	}
-	if len(round.Holes) == 0 {
-		return fmt.Errorf("round must contain at least one hole")
-	}
-	seen := make(map[int]bool)
-	for _, hole := range round.Holes {
-		if hole.HoleNumber <= 0 {
-			return fmt.Errorf("hole_number must be positive")
-		}
-		if seen[hole.HoleNumber] {
-			return fmt.Errorf("hole %d appears more than once", hole.HoleNumber)
-		}
-		seen[hole.HoleNumber] = true
-		if hole.Par <= 0 {
-			return fmt.Errorf("hole %d: par must be positive", hole.HoleNumber)
-		}
-		if hole.Strokes <= 0 {
-			return fmt.Errorf("hole %d: strokes must be positive", hole.HoleNumber)
-		}
-	}
-	return nil
-}
-
 type RoundStore interface {
 	SaveRound(ctx context.Context, round Round) error
 	GetRound(ctx context.Context, id int64) (Round, error)
@@ -96,4 +39,61 @@ func (s *Service) GetRound(ctx context.Context, id int64) (Round, error) {
 	}
 
 	return round, nil
+}
+
+func ValidateRound(round Round) error {
+	if strings.TrimSpace(round.CourseName) == "" {
+		return fmt.Errorf("course_name is required")
+	}
+	if _, err := time.Parse("2006-01-02", round.Date); err != nil {
+		return fmt.Errorf("date must be a valid date in YYYY-MM-DD format")
+	}
+	if len(round.Holes) == 0 {
+		return fmt.Errorf("round must contain at least one hole")
+	}
+	seen := make(map[int]bool)
+	for _, hole := range round.Holes {
+		if hole.HoleNumber <= 0 {
+			return fmt.Errorf("hole_number must be positive")
+		}
+		if seen[hole.HoleNumber] {
+			return fmt.Errorf("hole %d appears more than once", hole.HoleNumber)
+		}
+		seen[hole.HoleNumber] = true
+		if hole.Par <= 0 {
+			return fmt.Errorf("hole %d: par must be positive", hole.HoleNumber)
+		}
+		if hole.Strokes <= 0 {
+			return fmt.Errorf("hole %d: strokes must be positive", hole.HoleNumber)
+		}
+	}
+	return nil
+}
+
+func TotalStrokes(round Round) int {
+	total := 0
+
+	for _, hole := range round.Holes {
+		total += hole.Strokes
+	}
+
+	return total
+}
+
+func TotalPar(round Round) int {
+	total := 0
+
+	for _, hole := range round.Holes {
+		total += hole.Par
+	}
+
+	return total
+}
+
+func ScoreRelativeToPar(round Round) int {
+	return TotalStrokes(round) - TotalPar(round)
+}
+
+func ConvertToStringDate(round Round) string {
+	return "not implemented"
 }

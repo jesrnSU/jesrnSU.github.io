@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -17,6 +18,10 @@ type roundStoreFunc func(context.Context, rounds.Round) error
 
 func (f roundStoreFunc) SaveRound(ctx context.Context, round rounds.Round) error {
 	return f(ctx, round)
+}
+
+func (f roundStoreFunc) GetRound(context.Context, int64) (rounds.Round, error) {
+	return rounds.Round{}, errors.New("unexpected GetRound call")
 }
 
 func TestSaveRoundEndpoint(t *testing.T) {
@@ -215,6 +220,83 @@ func TestRoundTotalRelativeScores(t *testing.T) {
 			for key, want := range map[string]int{"total_strokes": tt.strokes, "total_par": 3, "score_relative_to_par": tt.relative} {
 				if got, ok := body[key]; !ok || got != want {
 					t.Errorf("%s = %d (present: %t), want %d", key, got, ok, want)
+				}
+			}
+		})
+	}
+}
+
+type getRoundStoreFunc func(context.Context, int64) (rounds.Round, error)
+
+func (f getRoundStoreFunc) SaveRound(context.Context, rounds.Round) error {
+	return errors.New("unexpected SaveRound call")
+}
+
+func (f getRoundStoreFunc) GetRound(ctx context.Context, id int64) (rounds.Round, error) {
+	return f(ctx, id)
+}
+
+func TestGetRoundEndpoint(t *testing.T) {
+	want := rounds.Round{
+		Id: 42, CourseName: "Practice", Date: "2026-10-29",
+		Holes: []rounds.HoleScore{{HoleNumber: 1, Par: 3, Strokes: 4}},
+	}
+	for _, tt := range []struct {
+		name        string
+		id          string
+		storeErr    error
+		unavailable bool
+		status      int
+		wantCalls   int
+		wantError   string
+	}{
+		{name: "found", id: "42", status: http.StatusOK, wantCalls: 1},
+		{name: "missing", id: "42", storeErr: rounds.ErrRoundNotFound, status: http.StatusNotFound, wantCalls: 1, wantError: "round not found"},
+		{name: "storage failure", id: "42", storeErr: errors.New("private database details"), status: http.StatusInternalServerError, wantCalls: 1, wantError: "could not get round"},
+		{name: "storage unavailable", id: "42", unavailable: true, status: http.StatusServiceUnavailable, wantError: "round storage is unavailable"},
+		{name: "non-numeric", id: "abc", status: http.StatusBadRequest, wantError: "round id must be a positive integer"},
+		{name: "zero", id: "0", status: http.StatusBadRequest, wantError: "round id must be a positive integer"},
+		{name: "negative", id: "-1", status: http.StatusBadRequest, wantError: "round id must be a positive integer"},
+		{name: "overflow", id: "9223372036854775808", status: http.StatusBadRequest, wantError: "round id must be a positive integer"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodGet, "/api/v1/rounds/"+tt.id, nil)
+			calls := 0
+			var service *rounds.Service
+			if !tt.unavailable {
+				service = rounds.NewService(getRoundStoreFunc(func(ctx context.Context, id int64) (rounds.Round, error) {
+					calls++
+					if ctx != request.Context() || id != want.Id {
+						t.Errorf("unexpected storage arguments: context = %v, id = %d", ctx, id)
+					}
+					return want, tt.storeErr
+				}))
+			}
+			response := httptest.NewRecorder()
+			NewRouter(service).ServeHTTP(response, request)
+			if response.Code != tt.status {
+				t.Fatalf("status = %d, want %d; body = %s", response.Code, tt.status, response.Body.String())
+			}
+			if calls != tt.wantCalls {
+				t.Errorf("storage calls = %d, want %d", calls, tt.wantCalls)
+			}
+			if tt.status == http.StatusOK {
+				var got rounds.Round
+				if err := json.Unmarshal(response.Body.Bytes(), &got); err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(got, want) {
+					t.Errorf("round = %+v, want %+v", got, want)
+				}
+			} else {
+				var body struct {
+					Error string `json:"error"`
+				}
+				if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+					t.Fatal(err)
+				}
+				if body.Error != tt.wantError {
+					t.Errorf("error = %q, want %q", body.Error, tt.wantError)
 				}
 			}
 		})

@@ -66,6 +66,7 @@ func ValidateRound(round Round) error {
 
 type RoundStore interface {
 	SaveRound(ctx context.Context, round Round) error
+	GetRound(ctx context.Context, id int64) (Round, error)
 }
 
 type Service struct {
@@ -86,4 +87,13 @@ func (s *Service) SaveRound(ctx context.Context, round Round) error {
 	}
 
 	return nil
+}
+
+func (s *Service) GetRound(ctx context.Context, id int64) (Round, error) {
+	round, err := s.store.GetRound(ctx, id)
+	if err != nil {
+		return Round{}, fmt.Errorf("get round: %w", err)
+	}
+
+	return round, nil
 }

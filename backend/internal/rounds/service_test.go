@@ -13,6 +13,10 @@ func (f roundStoreFunc) SaveRound(ctx context.Context, round Round) error {
 	return f(ctx, round)
 }
 
+func (f roundStoreFunc) GetRound(context.Context, int64) (Round, error) {
+	return Round{}, errors.New("unexpected GetRound call")
+}
+
 func TestSaveRound(t *testing.T) {
 	round := Round{
 		CourseName: "Visättra",
